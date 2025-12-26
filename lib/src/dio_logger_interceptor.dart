@@ -12,7 +12,8 @@ class ApiLoggerDioInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    _requestTimestamps[options.uri.toString()] = DateTime.now().millisecondsSinceEpoch;
+    _requestTimestamps[options.uri.toString()] =
+        DateTime.now().millisecondsSinceEpoch;
 
     _logger.logRequest(
       method: options.method,
@@ -25,7 +26,8 @@ class ApiLoggerDioInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    final startTime = _requestTimestamps.remove(response.requestOptions.uri.toString());
+    final startTime =
+        _requestTimestamps.remove(response.requestOptions.uri.toString());
     final duration = startTime != null
         ? DateTime.now().millisecondsSinceEpoch - startTime
         : 0;
@@ -42,18 +44,19 @@ class ApiLoggerDioInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-     final startTime = _requestTimestamps.remove(err.requestOptions.uri.toString());
-     final duration = startTime != null
+    final startTime =
+        _requestTimestamps.remove(err.requestOptions.uri.toString());
+    final duration = startTime != null
         ? DateTime.now().millisecondsSinceEpoch - startTime
         : 0;
-     
-     _logger.logResponse(
-       url: err.requestOptions.uri.toString(),
-       statusCode: err.response?.statusCode ?? 0,
-       durationMs: duration,
-       body: err.response?.data ?? err.message,
-       method: err.requestOptions.method,
-     );
-     handler.next(err);
+
+    _logger.logResponse(
+      url: err.requestOptions.uri.toString(),
+      statusCode: err.response?.statusCode ?? 0,
+      durationMs: duration,
+      body: err.response?.data ?? err.message,
+      method: err.requestOptions.method,
+    );
+    handler.next(err);
   }
 }

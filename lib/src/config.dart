@@ -26,7 +26,13 @@ class ApiLoggerConfig {
     this.showHeaders = true,
     this.showRequestBody = true,
     this.showResponseBody = true,
-    this.maskedKeys = const ['token', 'password', 'authorization', 'secret', 'key'],
+    this.maskedKeys = const [
+      'token',
+      'password',
+      'authorization',
+      'secret',
+      'key'
+    ],
     this.maxBodyLength = 10000,
     this.logColor = true,
   });

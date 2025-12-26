@@ -18,11 +18,11 @@ class ApiLoggerHttpClient extends http.BaseClient {
     final startTime = DateTime.now();
 
     // Log Request
-    // Note: StreamedRequest body reading is one-off, so we might not be able to read 
-    // body of http.StreamedRequest unless we buffer it. 
-    // http.BaseRequest doesn't easily expose body if it's streamed. 
+    // Note: StreamedRequest body reading is one-off, so we might not be able to read
+    // body of http.StreamedRequest unless we buffer it.
+    // http.BaseRequest doesn't easily expose body if it's streamed.
     // Most users use http.Request which has .body or .bodyBytes.
-    
+
     dynamic body;
     if (request is http.Request) {
       body = request.body;
@@ -30,7 +30,7 @@ class ApiLoggerHttpClient extends http.BaseClient {
     } else if (request is http.MultipartRequest) {
       body = "MultipartRequest: ${request.fields}";
     }
-    
+
     _logger.logRequest(
       method: request.method,
       url: request.url.toString(),
@@ -47,10 +47,10 @@ class ApiLoggerHttpClient extends http.BaseClient {
       // But StreamedResponse.stream is single subscription.
       // If we read it here, the caller cannot read it.
       // We must replace the stream.
-      
+
       final content = await response.stream.toBytes();
       final responseBody = String.fromCharCodes(content);
-      
+
       _logger.logResponse(
         url: request.url.toString(),
         statusCode: response.statusCode,
@@ -71,16 +71,15 @@ class ApiLoggerHttpClient extends http.BaseClient {
         reasonPhrase: response.reasonPhrase,
       );
     } catch (e) {
-       final endTime = DateTime.now();
-       final duration = endTime.difference(startTime).inMilliseconds;
-       _logger.logResponse(
-         url: request.url.toString(),
-         statusCode: 0, // 0 for error
-         durationMs: duration,
-         body: "Error: $e",
-         method: request.method
-       );
-       rethrow;
+      final endTime = DateTime.now();
+      final duration = endTime.difference(startTime).inMilliseconds;
+      _logger.logResponse(
+          url: request.url.toString(),
+          statusCode: 0, // 0 for error
+          durationMs: duration,
+          body: "Error: $e",
+          method: request.method);
+      rethrow;
     }
   }
 

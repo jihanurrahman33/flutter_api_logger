@@ -43,17 +43,17 @@ class _HomePageState extends State<HomePage> {
 
   // HTTP Client
   late http.Client _httpClient;
-  
+
   // Dio Client
   late Dio _dio;
 
   ApiLoggerConfig get _config => ApiLoggerConfig(
-    enableLog: _enableLog,
-    showHeaders: _showHeaders,
-    showRequestBody: _showBody,
-    showResponseBody: _showBody, 
-    logColor: _logColor,
-  );
+        enableLog: _enableLog,
+        showHeaders: _showHeaders,
+        showRequestBody: _showBody,
+        showResponseBody: _showBody,
+        logColor: _logColor,
+      );
 
   @override
   void initState() {
@@ -66,11 +66,11 @@ class _HomePageState extends State<HomePage> {
     // In real app, you might just update config if supported or simple wrapper.
     // Here our ApiLoggerHttpClient takes config in constructor.
     _httpClient = ApiLoggerHttpClient(config: _config);
-    
+
     _dio = Dio();
     _dio.interceptors.add(ApiLoggerDioInterceptor(config: _config));
   }
-  
+
   void _updateConfig() {
     setState(() {
       _setupClients();
@@ -83,7 +83,10 @@ class _HomePageState extends State<HomePage> {
     try {
       final response = await _httpClient.post(
         Uri.parse('https://jsonplaceholder.typicode.com/posts'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer secret_token'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer secret_token'
+        },
         body: jsonEncode({'title': 'foo', 'body': 'bar', 'userId': 1}),
       );
       setState(() => _status = 'HTTP Response: ${response.statusCode}');
@@ -97,7 +100,8 @@ class _HomePageState extends State<HomePage> {
     try {
       final response = await _dio.get(
         'https://jsonplaceholder.typicode.com/users/1',
-        options: Options(headers: {'Authorization': 'Bearer secret_user_token'}),
+        options:
+            Options(headers: {'Authorization': 'Bearer secret_user_token'}),
       );
       setState(() => _status = 'Dio Response: ${response.statusCode}');
     } catch (e) {
@@ -119,33 +123,48 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const Text('Configuration', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Configuration',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     SwitchListTile(
                       title: const Text('Enable Logging'),
                       value: _enableLog,
-                      onChanged: (v) { _enableLog = v; _updateConfig(); },
+                      onChanged: (v) {
+                        _enableLog = v;
+                        _updateConfig();
+                      },
                     ),
                     SwitchListTile(
                       title: const Text('Show Headers'),
                       value: _showHeaders,
-                      onChanged: (v) { _showHeaders = v; _updateConfig(); },
+                      onChanged: (v) {
+                        _showHeaders = v;
+                        _updateConfig();
+                      },
                     ),
                     SwitchListTile(
                       title: const Text('Show Body'),
                       value: _showBody,
-                      onChanged: (v) { _showBody = v; _updateConfig(); },
+                      onChanged: (v) {
+                        _showBody = v;
+                        _updateConfig();
+                      },
                     ),
                     SwitchListTile(
                       title: const Text('Log Color'),
                       value: _logColor,
-                      onChanged: (v) { _logColor = v; _updateConfig(); },
+                      onChanged: (v) {
+                        _logColor = v;
+                        _updateConfig();
+                      },
                     ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            Text('Status: $_status', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+            Text('Status: $_status',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: _makeHttpRequest,
