@@ -1,122 +1,103 @@
-# Flutter API Logger
+# flutter_api_logger
 
-A lightweight, beautiful, and flexible API request & response logger for Flutter. Supports both `http` and `dio` packages.
+[![pub package](https://img.shields.io/pub/v/flutter_api_logger.svg)](https://pub.dev/packages/flutter_api_logger)
+[![CI](https://github.com/jihanurrahman33/flutter_api_logger/actions/workflows/ci.yml/badge.svg)](https://github.com/jihanurrahman33/flutter_api_logger/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Dart](https://img.shields.io/badge/dart-3.0%2B-blue.svg)
-![Flutter](https://img.shields.io/badge/flutter-3.0%2B-blue.svg)
+A secure API request & response logger for **`http`** and **`dio`**. One
+package, one config, same output for both clients. Pure Dart, so it also works
+in server and CLI code.
 
 ## Features
 
-- 🚀 **Easy Integration**: Works with `http` and `dio` out of the box.
-- 🎨 **Beautiful Logs**: Color-coded, easy-to-read console output.
-- 🔒 **Secure**: Automatically masks sensitive fields like passwords and tokens.
-- ⚙️ **Configurable**: Control what to log (headers, body, etc.).
-- 🛡️ **Production Safe**: Disabled by default in release mode unless explicitly enabled.
+- 🔒 **Secure by default:** tokens, passwords, cookies and API keys are masked in headers, nested JSON, JSON *strings*, form bodies and URL query parameters.
+- 🛡️ **Silent in release builds** unless you set `enableInRelease: true`.
+- 🔗 **Request/response correlation:** every pair shares an id (`#3`), so concurrent calls to the same URL never get mixed up.
+- 🧾 **Optional masked cURL output** to reproduce a call in a terminal or Postman.
+- 📦 Understands `FormData` / multipart (field values masked, files summarized) and binary bodies.
+- 🌐 UTF-8 safe (Bangla and other non-ASCII responses stay readable).
+- ⚡ Doesn't buffer binary or large downloads when it won't log the body.
+- 🔌 Custom output sink and URL exclusions.
 
-## Installation
-
-Add this to your package's `pubspec.yaml` file:
+## Install
 
 ```yaml
 dependencies:
-  flutter_api_logger: ^1.0.0
+  flutter_api_logger: ^1.1.0
 ```
 
 ## Usage
 
-### 1. Using with `http` package
-
-Use `ApiLoggerHttpClient` as a wrapper around your `http.Client`.
+### dio
 
 ```dart
-import 'package:http/http.dart' as http;
-import 'package:flutter_api_logger/flutter_api_logger.dart';
-
-void main() async {
-  // Create the client with default config
-  final client = ApiLoggerHttpClient();
-
-  // Make requests as usual
-  final response = await client.get(Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
-  
-  print(response.body);
-  
-  // Close the client when done
-  client.close();
-}
+final dio = Dio();
+dio.interceptors.add(ApiLoggerDioInterceptor());
 ```
 
-### 2. Using with `dio` package
-
-Add `ApiLoggerDioInterceptor` to your Dio instance.
+### http
 
 ```dart
-import 'package:dio/dio.dart';
-import 'package:flutter_api_logger/flutter_api_logger.dart';
-
-void main() async {
-  final dio = Dio();
-  
-  // Add the interceptor
-  dio.interceptors.add(ApiLoggerDioInterceptor());
-
-  // Make requests
-  await dio.get('https://jsonplaceholder.typicode.com/users/1');
-}
+final client = ApiLoggerHttpClient();
+final response = await client.get(Uri.parse('https://example.com/users/1'));
+client.close();
 ```
 
-## Configuration
-
-You can customize the logger by passing an `ApiLoggerConfig` object.
+### Configure
 
 ```dart
-final config = ApiLoggerConfig(
-  enableLog: true,                  // Enable/Disable logging
-  showHeaders: true,                // Show request headers
-  showRequestBody: true,            // Show request body
-  showResponseBody: true,           // Show response body
-  logColor: true,                   // Use ANSI colors
-  maskedKeys: ['password', 'token'], // Keys to mask in JSON body/headers
-  maxBodyLength: 1000,              // Truncate long bodies
+const config = ApiLoggerConfig(
+  showCurl: true,
+  showResponseHeaders: true,
+  maskedKeys: ['token', 'password', 'authorization', 'ssn'],
+  excludeUrlPatterns: ['/health', 'analytics'],
 );
 
-final client = ApiLoggerHttpClient(config: config);
-// or
 dio.interceptors.add(ApiLoggerDioInterceptor(config: config));
+final client = ApiLoggerHttpClient(config: config);
 ```
 
-### Configuration Options
+| Option | Default | Description |
+|---|---|---|
+| `enableLog` | `true` | Master switch. |
+| `enableInRelease` | `false` | Allow logging in release builds. |
+| `showHeaders` | `true` | Request headers. |
+| `showResponseHeaders` | `false` | Response headers. |
+| `showRequestBody` / `showResponseBody` | `true` | Bodies. |
+| `showCurl` | `false` | Masked cURL command per request. |
+| `maskedKeys` | token, password, authorization, secret, key, cookie, otp, credential | Case-insensitive substring match. |
+| `maskValue` | `***` | Replacement text. |
+| `maxBodyLength` | `10000` | Truncate long bodies. |
+| `logColor` | `true` | ANSI colors. |
+| `excludeUrlPatterns` | `[]` | Skip URLs containing any of these. |
+| `output` | `dart:developer` log | Custom sink, e.g. `print` or your own logger. |
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enableLog` | `bool` | `true` | Master switch to enable/disable logging. |
-| `showHeaders` | `bool` | `true` | Whether to log request headers. |
-| `showRequestBody` | `bool` | `true` | Whether to log request body. |
-| `showResponseBody` | `bool` | `true` | Whether to log response body. |
-| `logColor` | `bool` | `true` | Whether to use ANSI colors for output. |
-| `maskedKeys` | `List<String>` | `['token', 'password', ...]` | List of JSON keys to mask. Matches partially and case-insensitive. |
-| `maxBodyLength` | `int` | `10000` | Max characters to log for body before truncating. |
-
-## Log Example
+## Example output
 
 ```
-┌──────── API REQUEST ────────
-│ GET https://api.example.com/users/1
-│ Headers: {Authorization: ***}
-│ Body: null
+┌──────── API REQUEST #1 ────────
+│ POST https://api.example.com/login?token=***
+│ Headers: {Authorization: ***, Accept: application/json}
+│ Body: {
+│   "user": "bob",
+│   "password": "***"
+│ }
 └─────────────────────────────
-
-⏱ 312 ms | Status: 200 OK
-┌──────── API RESPONSE ───────
+┌──────── API RESPONSE #1 ────────
+│ POST https://api.example.com/login?token=***
+│ ⏱ 312 ms | Status: 200
 │ {
-│   "id": 1,
-│   "name": "Leanne Graham",
-│   "email": "Sincere@april.biz"
+│   "token": "***"
 │ }
 └─────────────────────────────
 ```
 
-## License
+## Upgrading to 1.1
 
-MIT License. See [LICENSE](LICENSE) for details.
+- **Release builds no longer log** unless `enableInRelease: true` (this is what 1.0 documented, but it was not enforced).
+- Masking now also covers JSON strings (the `http` client's bodies), form bodies and URLs.
+- The package no longer depends on Flutter or `rxdart`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under MIT.
