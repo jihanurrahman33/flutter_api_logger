@@ -16,7 +16,7 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: ${{ matrix.sdk }}
-      - run: dart pub get
+      - run: dart pub get --no-example
       - run: dart format --set-exit-if-changed lib test
       - run: dart analyze --fatal-infos lib test
       - run: dart test
@@ -26,5 +26,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
-      - run: dart pub get
+      - run: dart pub get --no-example
       - run: dart pub publish --dry-run
